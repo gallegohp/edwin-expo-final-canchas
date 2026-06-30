@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { useAppContext } from '../context/AppContext';
 import { globalStyles, colors } from '../styles/globalStyles';
-import { VictoryBar, VictoryChart, VictoryTheme, VictoryLine, VictoryPie } from 'victory-native';
+import { VictoryBar, VictoryChart, VictoryTheme, VictoryPie } from 'victory-native';
+import { formatCurrency } from '../utils/helpers';
 
 const { width } = Dimensions.get('window');
 
@@ -19,7 +20,6 @@ export default function InicioScreen() {
   const canchasDisponibles = canchas.filter(c => !c.enMantenimiento).length;
   const canchasMantenimiento = canchas.filter(c => c.enMantenimiento).length;
 
-  // Datos para gráfico de ingresos por día (últimos 7 días)
   const getUltimos7Dias = () => {
     const hoy = new Date();
     const data = [];
@@ -40,7 +40,6 @@ export default function InicioScreen() {
 
   const datosIngresos = getUltimos7Dias();
 
-  // Datos para gráfico de reservas por cancha
   const getReservasPorCancha = () => {
     const counts = {};
     reservas.forEach(r => {
@@ -58,22 +57,21 @@ export default function InicioScreen() {
     <ScrollView style={globalStyles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.header}>📊 Dashboard</Text>
 
-      {/* Tarjetas de resumen */}
       <View style={styles.cardRow}>
         <View style={[styles.card, styles.cardGreen]}>
           <Text style={styles.cardLabel}>Ingresos</Text>
-          <Text style={styles.cardValue}>${totalIngresos.toFixed(2)}</Text>
+          <Text style={styles.cardValue}>{formatCurrency(totalIngresos)}</Text>
         </View>
         <View style={[styles.card, styles.cardRed]}>
           <Text style={styles.cardLabel}>Gastos</Text>
-          <Text style={styles.cardValue}>${totalGastos.toFixed(2)}</Text>
+          <Text style={styles.cardValue}>{formatCurrency(totalGastos)}</Text>
         </View>
       </View>
       <View style={styles.cardRow}>
         <View style={[styles.card, styles.cardBlue]}>
           <Text style={styles.cardLabel}>Balance</Text>
           <Text style={[styles.cardValue, { color: balance >= 0 ? colors.primary : colors.danger }]}>
-            ${balance.toFixed(2)}
+            {formatCurrency(balance)}
           </Text>
         </View>
         <View style={[styles.card, styles.cardPurple]}>
@@ -82,7 +80,6 @@ export default function InicioScreen() {
         </View>
       </View>
 
-      {/* Gráfico de ingresos semanales */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>📈 Ingresos últimos 7 días</Text>
         <VictoryChart
@@ -98,12 +95,11 @@ export default function InicioScreen() {
             style={{
               data: { fill: colors.primary },
             }}
-            labels={({ datum }) => `$${datum.ingreso.toFixed(2)}`}
+            labels={({ datum }) => formatCurrency(datum.ingreso)}
           />
         </VictoryChart>
       </View>
 
-      {/* Gráfico de reservas por cancha */}
       {datosCanchas.length > 0 && (
         <View style={styles.chartContainer}>
           <Text style={styles.chartTitle}>🏟️ Reservas por cancha</Text>
@@ -120,7 +116,6 @@ export default function InicioScreen() {
         </View>
       )}
 
-      {/* Estadísticas de canchas */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>⚽ Estado de canchas</Text>
         <View style={styles.statsRow}>
