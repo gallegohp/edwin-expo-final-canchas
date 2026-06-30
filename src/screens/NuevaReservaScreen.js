@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import { globalStyles, colors } from '../styles/globalStyles';
 import Boton from '../components/Boton';
 import { Calendar } from 'react-native-calendars';
+import { formatCurrency } from '../utils/helpers';
 
 export default function NuevaReservaScreen({ navigation }) {
   const { canchas, agregarReserva } = useAppContext();
@@ -17,7 +18,6 @@ export default function NuevaReservaScreen({ navigation }) {
   const [precio, setPrecio] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Precio sugerido según cancha
   useEffect(() => {
     const cancha = canchas.find(c => c.id === canchaId);
     if (cancha) {
@@ -46,12 +46,10 @@ export default function NuevaReservaScreen({ navigation }) {
     navigation.goBack();
   };
 
-  // Formatear fecha
   const formatDate = (date) => {
     return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  // Botones de hora (1-12)
   const renderHourButtons = () => {
     const hours = Array.from({ length: 12 }, (_, i) => i + 1);
     return (
@@ -73,7 +71,6 @@ export default function NuevaReservaScreen({ navigation }) {
     <ScrollView style={globalStyles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.sectionTitle}>📋 Nueva Reserva</Text>
 
-      {/* Selección de cancha */}
       <Text style={globalStyles.label}>🏟️ Cancha</Text>
       <View style={styles.pickerContainer}>
         {canchas.map(c => (
@@ -90,7 +87,6 @@ export default function NuevaReservaScreen({ navigation }) {
         ))}
       </View>
 
-      {/* Nombre cliente */}
       <Text style={globalStyles.label}>👤 Cliente</Text>
       <TextInput
         style={[globalStyles.input, styles.inputModern]}
@@ -100,7 +96,6 @@ export default function NuevaReservaScreen({ navigation }) {
         placeholderTextColor="#aaa"
       />
 
-      {/* Fecha con calendario */}
       <Text style={globalStyles.label}>📅 Fecha</Text>
       <TouchableOpacity style={styles.dateButton} onPress={() => setShowCalendar(true)}>
         <Text style={styles.dateButtonText}>{formatDate(fecha)}</Text>
@@ -128,7 +123,6 @@ export default function NuevaReservaScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* Hora */}
       <Text style={globalStyles.label}>🕒 Hora</Text>
       {renderHourButtons()}
       <View style={styles.periodContainer}>
@@ -160,7 +154,6 @@ export default function NuevaReservaScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Duración */}
       <Text style={globalStyles.label}>⏱️ Duración</Text>
       <View style={styles.duracionContainer}>
         {[30, 60, 90, 120].map(d => (
@@ -174,7 +167,6 @@ export default function NuevaReservaScreen({ navigation }) {
         ))}
       </View>
 
-      {/* Precio */}
       <Text style={globalStyles.label}>💰 Precio</Text>
       <TextInput
         style={[globalStyles.input, styles.inputModern]}
