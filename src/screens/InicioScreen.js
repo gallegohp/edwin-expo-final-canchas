@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { useAppContext } from '../context/AppContext';
 import { globalStyles, colors } from '../styles/globalStyles';
-import { VictoryBar, VictoryChart, VictoryTheme, VictoryPie } from 'victory-native';
+import { BarChart, PieChart } from 'react-native-chart-kit';
 import { formatCurrency } from '../utils/helpers';
 
 const { width } = Dimensions.get('window');
@@ -20,6 +20,7 @@ export default function InicioScreen() {
   const canchasDisponibles = canchas.filter(c => !c.enMantenimiento).length;
   const canchasMantenimiento = canchas.filter(c => c.enMantenimiento).length;
 
+  // Datos para gráfico de ingresos por día (últimos 7 días)
   const getUltimos7Dias = () => {
     const hoy = new Date();
     const data = [];
@@ -40,23 +41,56 @@ export default function InicioScreen() {
 
   const datosIngresos = getUltimos7Dias();
 
+  // Datos para gráfico de reservas por cancha (Pie)
   const getReservasPorCancha = () => {
     const counts = {};
     reservas.forEach(r => {
       counts[r.canchaId] = (counts[r.canchaId] || 0) + 1;
     });
-    return Object.keys(counts).map(id => ({
-      cancha: canchas.find(c => c.id === id)?.nombre || id,
-      reservas: counts[id],
-    }));
+    const result = Object.keys(counts).map(id => {
+      const cancha = canchas.find(c => c.id === id);
+      return {
+        name: cancha?.nombre || id,
+        count: counts[id],
+        color: ['#4CAF50', '#FF9800', '#F44336', '#2196F3', '#9C27B0'][Object.keys(counts).indexOf(id) % 5],
+        legendFontColor: '#333',
+        legendFontSize: 12,
+      };
+    });
+    return result;
   };
 
   const datosCanchas = getReservasPorCancha();
+
+  // Preparar datos para BarChart (ingresos)
+  const barData = {
+    labels: datosIngresos.map(d => d.dia),
+    datasets: [{
+      data: datosIngresos.map(d => d.ingreso),
+    }]
+  };
+
+  const chartConfig = {
+    backgroundGradientFrom: '#fff',
+    backgroundGradientTo: '#fff',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: '6',
+      strokeWidth: '2',
+      stroke: '#4CAF50',
+    },
+  };
 
   return (
     <ScrollView style={globalStyles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.header}>📊 Dashboard</Text>
 
+      {/* Tarjetas de resumen */}
       <View style={styles.cardRow}>
         <View style={[styles.card, styles.cardGreen]}>
           <Text style={styles.cardLabel}>Ingresos</Text>
@@ -80,42 +114,50 @@ export default function InicioScreen() {
         </View>
       </View>
 
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>📈 Ingresos últimos 7 días</Text>
-        <VictoryChart
-          width={width - 40}
-          height={200}
-          theme={VictoryTheme.material}
-          domainPadding={{ x: 20 }}
-        >
-          <VictoryBar
-            data={datosIngresos}
-            x="dia"
-            y="ingreso"
-            style={{
-              data: { fill: colors.primary },
-            }}
-            labels={({ datum }) => formatCurrency(datum.ingreso)}
-          />
-        </VictoryChart>
-      </View>
-
-      {datosCanchas.length > 0 && (
+      {/* Gráfico de barras: ingresos últimos 7 días */}
+      {datosIngresos.some(d => d.ingreso > 0) ? (
         <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>🏟️ Reservas por cancha</Text>
-          <VictoryPie
+          <Text style={styles.chartTitle}>📈 Ingresos últimos 7 días</Text>
+          <BarChart
+            data={barData}
             width={width - 40}
             height={200}
-            data={datosCanchas}
-            x="cancha"
-            y="reservas"
-            colorScale={['#4CAF50', '#FF9800', '#F44336', '#2196F3', '#9C27B0']}
-            labelRadius={({ innerRadius }) => innerRadius + 25}
-            labels={({ datum }) => `${datum.cancha}: ${datum.reservas}`}
+            chartConfig={chartConfig}
+            verticalLabelRotation={30}
+            fromZero={true}
+            showValuesOnTopOfBars={true}
           />
+        </View>
+      ) : (
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>📈 Ingresos últimos 7 días</Text>
+          <Text style={styles.noDataText}>No hay ingresos en los últimos 7 días</Text>
         </View>
       )}
 
+      {/* Gráfico de pastel: reservas por cancha */}
+      {datosCanchas.length > 0 ? (
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>🏟️ Reservas por cancha</Text>
+          <PieChart
+            data={datosCanchas}
+            width={width - 40}
+            height={200}
+            chartConfig={chartConfig}
+            accessor="count"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          />
+        </View>
+      ) : (
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>🏟️ Reservas por cancha</Text>
+          <Text style={styles.noDataText}>No hay reservas registradas</Text>
+        </View>
+      )}
+
+      {/* Estadísticas de canchas */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>⚽ Estado de canchas</Text>
         <View style={styles.statsRow}>
@@ -195,6 +237,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 8,
+    textAlign: 'center',
+  },
+  noDataText: {
+    textAlign: 'center',
+    color: '#888',
+    marginVertical: 20,
+    fontSize: 14,
   },
   statsRow: {
     flexDirection: 'row',
