@@ -49,7 +49,7 @@ export default function AppNavigator() {
             else if (route.name === 'Reservas') iconName = 'calendar-outline';
             else if (route.name === 'Finanzas') iconName = 'cash-outline';
             else if (route.name === 'Torneos') iconName = 'trophy-outline';
-            return <Icon name={iconName} size={size} color={color} />;
+            return <Ionicons name={iconName} size={size} color={color} />;
           },
           tabBarActiveTintColor: '#4CAF50',
           tabBarInactiveTintColor: 'gray',
