@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, FlatList, Text, StyleSheet, Alert } from 'react-native';
+import { View, FlatList, Text, StyleSheet } from 'react-native';
 import { useAppContext } from '../context/AppContext';
 import { globalStyles } from '../styles/globalStyles';
 import Boton from '../components/Boton';
 import TorneoCard from '../components/TorneoCard';
 
 export default function TorneosScreen({ navigation }) {
-  const { torneos, eliminarTorneo } = useAppContext();
+  const { torneos } = useAppContext();
 
   const verTorneo = (id) => {
-      navigation.navigate('DetalleTorneo', { torneoId: id });
+    navigation.navigate('DetalleTorneo', { torneoId: id });
   };
 
   return (
