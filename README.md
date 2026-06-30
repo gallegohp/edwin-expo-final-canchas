@@ -296,6 +296,11 @@ GitHub:
 https://github.com/gallegohp/edwin-expo-final-canchas.git
 ```
 
+Diseño: 
+```
+https://ballparks-connect.lovable.app
+```
+
 Proyecto desarrollado como evidencia del programa **ADSO**.
 
 ---
