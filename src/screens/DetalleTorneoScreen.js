@@ -13,37 +13,32 @@ export default function DetalleTorneoScreen({ route, navigation }) {
   }
 
   const [rondas, setRondas] = useState(torneo.rondas || []);
-  const [editandoPartido, setEditandoPartido] = useState(null); // { rondaIndex, partidoIndex }
+  const [modalVisible, setModalVisible] = useState(false);
+  const [goles1, setGoles1] = useState(0);
+  const [goles2, setGoles2] = useState(0);
+  const [editando, setEditando] = useState(null);
 
-  // Función para actualizar resultado de un partido
-  const actualizarResultado = (rondaIdx, partidoIdx, goles1, goles2) => {
+  const actualizarResultado = (rondaIdx, partidoIdx, g1, g2) => {
     const nuevasRondas = [...rondas];
     const partido = nuevasRondas[rondaIdx][partidoIdx];
-    partido.goles1 = goles1;
-    partido.goles2 = goles2;
-    // Determinar ganador
-    if (goles1 > goles2) partido.ganador = partido.equipo1;
-    else if (goles2 > goles1) partido.ganador = partido.equipo2;
-    else if (goles1 === goles2 && goles1 !== null && goles2 !== null) {
-      // Empate, podríamos pedir penales o sorteo, pero simplificamos: gana equipo1
-      partido.ganador = partido.equipo1;
+    partido.goles1 = g1;
+    partido.goles2 = g2;
+    if (g1 > g2) partido.ganador = partido.equipo1;
+    else if (g2 > g1) partido.ganador = partido.equipo2;
+    else if (g1 === g2 && g1 !== null && g2 !== null) {
+      partido.ganador = partido.equipo1; // empate gana equipo1
     }
-    // Si hay ganador y es un partido con equipo2 null (descanso), ya está asignado
     setRondas(nuevasRondas);
-    // Guardar en el contexto (persistencia)
     actualizarTorneo(torneo.id, { rondas: nuevasRondas });
   };
 
-  // Avanzar a la siguiente ronda (rellenar participantes)
   const avanzarRonda = () => {
-    // Tomar los ganadores de la última ronda
     const ultimaRonda = rondas[rondas.length - 1];
     const ganadores = ultimaRonda.map(p => p.ganador).filter(g => g !== null && g !== undefined);
     if (ganadores.length <= 1) {
       Alert.alert('Torneo finalizado', `El campeón es ${ganadores[0]}`);
       return;
     }
-    // Crear nueva ronda con los ganadores
     const nuevaRonda = [];
     for (let i = 0; i < ganadores.length; i += 2) {
       if (i + 1 < ganadores.length) {
@@ -69,14 +64,17 @@ export default function DetalleTorneoScreen({ route, navigation }) {
           <>
             <Text style={styles.equipoNombre}>{partido.equipo2 || '?'}</Text>
             {tieneResultado ? (
-              <Text style={styles.resultado}>
-                {partido.goles1} - {partido.goles2}
-              </Text>
+              <Text style={styles.resultado}>{partido.goles1} - {partido.goles2}</Text>
             ) : (
               <Boton
                 title="Ingresar resultado"
                 type="secondary"
-                onPress={() => setEditandoPartido({ rondaIdx, partidoIdx })}
+                onPress={() => {
+                  setGoles1(0);
+                  setGoles2(0);
+                  setEditando({ rondaIdx, partidoIdx });
+                  setModalVisible(true);
+                }}
                 style={{ marginTop: 4 }}
               />
             )}
@@ -85,36 +83,6 @@ export default function DetalleTorneoScreen({ route, navigation }) {
         )}
       </View>
     );
-  };
-
-  // Si hay un partido en edición, mostramos un modal simple (usamos Alert para ingresar goles)
-  // Para simplificar, usaremos prompts con Alert, pero es mejor usar un modal.
-  // Implementaré una solución simple con Alert y TextInput (pero ya que queremos evitar cajas de texto, usaremos botones + y -)
-  // Sin embargo, para no complicar, usaré Alert con dos inputs numéricos (es aceptable).
-  // O mejor, creamos un mini modal con botones + y -
-  // Por simplicidad, mostraré un prompt (aunque no es lo más amigable, pero funcional)
-  // Podemos mejorar después.
-
-  // Usaré un estado local para mostrar un modal simple con dos contadores
-  const [modalVisible, setModalVisible] = useState(false);
-  const [goles1, setGoles1] = useState(0);
-  const [goles2, setGoles2] = useState(0);
-  const [editando, setEditando] = useState(null);
-
-  const abrirModalResultado = (rondaIdx, partidoIdx) => {
-    const partido = rondas[rondaIdx][partidoIdx];
-    setGoles1(0);
-    setGoles2(0);
-    setEditando({ rondaIdx, partidoIdx });
-    setModalVisible(true);
-  };
-
-  const guardarResultadoModal = () => {
-    if (editando) {
-      actualizarResultado(editando.rondaIdx, editando.partidoIdx, goles1, goles2);
-      setModalVisible(false);
-      setEditando(null);
-    }
   };
 
   return (
@@ -133,7 +101,6 @@ export default function DetalleTorneoScreen({ route, navigation }) {
         <Boton title="Avanzar Ronda" onPress={avanzarRonda} style={{ marginTop: 16 }} />
       )}
 
-      {/* Modal simple para ingresar goles */}
       {modalVisible && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -164,7 +131,13 @@ export default function DetalleTorneoScreen({ route, navigation }) {
             </View>
             <View style={styles.modalButtons}>
               <Boton title="Cancelar" type="secondary" onPress={() => setModalVisible(false)} style={{ flex: 1, marginRight: 8 }} />
-              <Boton title="Guardar" onPress={guardarResultadoModal} style={{ flex: 1 }} />
+              <Boton title="Guardar" onPress={() => {
+                if (editando) {
+                  actualizarResultado(editando.rondaIdx, editando.partidoIdx, goles1, goles2);
+                  setModalVisible(false);
+                  setEditando(null);
+                }
+              }} style={{ flex: 1 }} />
             </View>
           </View>
         </View>
