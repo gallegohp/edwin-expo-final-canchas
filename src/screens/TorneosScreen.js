@@ -9,7 +9,7 @@ export default function TorneosScreen({ navigation }) {
   const { torneos, eliminarTorneo } = useAppContext();
 
   const verTorneo = (id) => {
-    Alert.alert('Ver torneo', 'Funcionalidad en desarrollo');
+      navigation.navigate('DetalleTorneo', { torneoId: id });
   };
 
   return (

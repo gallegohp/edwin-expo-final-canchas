@@ -3,6 +3,7 @@ import { View, Text, TextInput, ScrollView, Alert, StyleSheet } from 'react-nati
 import { useAppContext } from '../context/AppContext';
 import { globalStyles } from '../styles/globalStyles';
 import Boton from '../components/Boton';
+import { generarEnfrentamientos } from '../utils/helpers';
 
 export default function NuevoTorneoScreen({ navigation }) {
   const { agregarTorneo } = useAppContext();
@@ -12,6 +13,10 @@ export default function NuevoTorneoScreen({ navigation }) {
 
   const agregarEquipo = () => {
     if (nombreEquipo.trim()) {
+      if (equipos.length >= 12) {
+        Alert.alert('Límite', 'Máximo 12 equipos');
+        return;
+      }
       setEquipos([...equipos, nombreEquipo.trim()]);
       setNombreEquipo('');
     }
@@ -24,31 +29,20 @@ export default function NuevoTorneoScreen({ navigation }) {
   };
 
   const sortear = () => {
-    if (equipos.length < 2) {
-      Alert.alert('Error', 'Se necesitan al menos 2 equipos');
+    if (equipos.length < 4) {
+      Alert.alert('Error', 'Se necesitan al menos 4 equipos');
       return;
-    }
-    const mezclados = [...equipos];
-    for (let i = mezclados.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [mezclados[i], mezclados[j]] = [mezclados[j], mezclados[i]];
-    }
-    const enfrentamientos = [];
-    for (let i = 0; i < mezclados.length; i += 2) {
-      if (i + 1 < mezclados.length) {
-        enfrentamientos.push([mezclados[i], mezclados[i + 1]]);
-      } else {
-        enfrentamientos.push([mezclados[i], 'DESCANSA']);
-      }
     }
     if (!nombre.trim()) {
       Alert.alert('Error', 'Ingresa un nombre para el torneo');
       return;
     }
+    // Generar enfrentamientos usando helper
+    const enfrentamientos = generarEnfrentamientos(equipos);
     agregarTorneo({
       nombre: nombre.trim(),
       equipos,
-      enfrentamientos,
+      rondas: enfrentamientos, // Guardamos las rondas completas
       estado: 'En curso',
     });
     navigation.goBack();
@@ -59,14 +53,19 @@ export default function NuevoTorneoScreen({ navigation }) {
       <Text style={globalStyles.label}>Nombre del Torneo</Text>
       <TextInput style={globalStyles.input} value={nombre} onChangeText={setNombre} />
 
-      <Text style={globalStyles.label}>Agregar Equipos</Text>
+      <Text style={globalStyles.label}>Agregar Equipos (mínimo 4, máximo 12)</Text>
       <View style={styles.equipoInput}>
-        <TextInput style={[globalStyles.input, { flex: 1 }]} value={nombreEquipo} onChangeText={setNombreEquipo} />
+        <TextInput
+          style={[globalStyles.input, { flex: 1 }]}
+          value={nombreEquipo}
+          onChangeText={setNombreEquipo}
+          placeholder="Nombre del equipo"
+        />
         <Boton title="+" onPress={agregarEquipo} style={{ marginLeft: 8 }} />
       </View>
       {equipos.map((eq, idx) => (
         <View key={idx} style={styles.equipoItem}>
-          <Text>{eq}</Text>
+          <Text style={styles.equipoNombre}>{eq}</Text>
           <Boton title="X" onPress={() => eliminarEquipo(idx)} type="danger" style={{ paddingHorizontal: 10 }} />
         </View>
       ))}
@@ -77,5 +76,15 @@ export default function NuevoTorneoScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   equipoInput: { flexDirection: 'row', alignItems: 'center' },
-  equipoItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 2, paddingHorizontal: 10, backgroundColor: '#eee', borderRadius: 5, padding: 5 },
+  equipoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 2,
+    paddingHorizontal: 10,
+    backgroundColor: '#eee',
+    borderRadius: 5,
+    padding: 5,
+  },
+  equipoNombre: { fontSize: 16, fontWeight: '500' },
 });

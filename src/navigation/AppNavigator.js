@@ -12,6 +12,7 @@ import NuevaReservaScreen from '../screens/NuevaReservaScreen';
 import FinanzasScreen from '../screens/FinanzasScreen';
 import TorneosScreen from '../screens/TorneosScreen';
 import NuevoTorneoScreen from '../screens/NuevoTorneoScreen';
+import DetalleTorneoScreen from '../screens/DetalleTorneoScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -34,6 +35,7 @@ const TorneosStack = () => (
   <Stack.Navigator>
     <Stack.Screen name="ListaTorneos" component={TorneosScreen} options={{ title: 'Torneos' }} />
     <Stack.Screen name="NuevoTorneo" component={NuevoTorneoScreen} options={{ title: 'Crear Torneo' }} />
+    <Stack.Screen name="DetalleTorneo" component={DetalleTorneoScreen} options={{ title: 'Detalle Torneo' }} />
   </Stack.Navigator>
 );
 
